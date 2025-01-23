@@ -16,14 +16,14 @@ class Board(fltk.Fl_Group):
     def draw(self):
         super().draw()
         color = [fltk.FL_WHITE, fltk.FL_DARK2]
-        highlight_color = [fltk.FL_YELLOW, fltk.FL_RED]
+        highlight_color = [fltk.FL_YELLOW, fltk.FL_YELLOW + 8]
         for y in range(0, self.w(), self.sqrsiz):
             for x in range(0, self.h(), self.sqrsiz):
                 c = color[(x + y) // self.sqrsiz % 2]
                 fltk.fl_rectf(x, y, self.sqrsiz, self.sqrsiz, c)
         for move in self.valid_moves:
             x, y = move
-            c = highlight_color[(x + y) // self.sqrsiz % 2]
+            c = highlight_color[(x + y) % 2]
             fltk.fl_rectf(x * self.sqrsiz, y * self.sqrsiz, self.sqrsiz, self.sqrsiz, c)
 
 
