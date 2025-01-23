@@ -57,6 +57,7 @@ class ChessPiece(fltk.Fl_Box):
                 return r
         match event:
             case fltk.FL_PUSH:
+                self.labelsize(150)
                 self.dx = fltk.Fl.event_x() - self.x()
                 self.dy = fltk.Fl.event_y() - self.y()
                 # highlight valid moves
@@ -67,7 +68,6 @@ class ChessPiece(fltk.Fl_Box):
                 self.parent().redraw()
                 return 1
             case fltk.FL_DRAG:
-                self.labelsize(150)
                 x = fltk.Fl.event_x()
                 y = fltk.Fl.event_y()
                 self.position(x - self.dx, y - self.dy)
