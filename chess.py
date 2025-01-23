@@ -100,6 +100,14 @@ class ChessPiece(fltk.Fl_Box):
                             self.window.refresh_board_pieces()
                             return 1
                     self.pos = (x, y)
+
+                    # promotion
+                    if (self.type == Piece.PAWN_WHITE and y == 7) or (
+                        self.type == Piece.PAWN_BLACK and y == 0
+                    ):
+                        self.parent().redraw()
+                        self.promotion()
+
                     self.window.refresh_board_pieces()
                     ChessPiece.white_turn = not ChessPiece.white_turn
                     print(f"Is white turn: {ChessPiece.white_turn}")
@@ -109,6 +117,26 @@ class ChessPiece(fltk.Fl_Box):
                 return 1
             case _:
                 return r
+
+    # check promotion
+    def promotion(self):
+        # put a fltk dialog first to ask whether to promote to a knight, bishop, rook, or queen
+        match fltk.fl_choice("Promote to:", "Queen", "Knight", ""):
+            case 0:
+                self.type = (
+                    Piece.QUEEN_WHITE if is_white(self.type) else Piece.QUEEN_BLACK
+                )
+            case 1:
+                self.type = (
+                    Piece.KNIGHT_WHITE if is_white(self.type) else Piece.KNIGHT_BLACK
+                )
+            case 2:
+                fltk.fl_message("Invalid choice. Promoting to Queen")
+                self.type = (
+                    Piece.QUEEN_WHITE if is_white(self.type) else Piece.QUEEN_BLACK
+                )
+        self.label(self.type.value)
+        self.window.refresh_board_pieces()
 
 
 class ChessWindow(fltk.Fl_Double_Window):
