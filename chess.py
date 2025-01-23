@@ -16,7 +16,7 @@ class Board(fltk.Fl_Group):
     def draw(self):
         super().draw()
         color = [fltk.FL_WHITE, fltk.FL_DARK2]
-        highlight_color = [fltk.FL_YELLOW, fltk.FL_YELLOW + 8]
+        highlight_color = [3, 3 + 8]
         for y in range(0, self.w(), self.sqrsiz):
             for x in range(0, self.h(), self.sqrsiz):
                 c = color[(x + y) // self.sqrsiz % 2]
@@ -31,6 +31,7 @@ class ChessPiece(fltk.Fl_Box):
     SIZE = 100
     pieces = [[None for _ in range(8)] for _ in range(8)]
     white_turn = True
+    ended = False
 
     def __init__(self, h, v, window):
         self.type = setup_text(h, v)
@@ -46,8 +47,6 @@ class ChessPiece(fltk.Fl_Box):
         ChessPiece.pieces[h][v] = self.type
         self.window = window
 
-
-
     def handle(self, event):
         r = super().handle(event)
         if ChessPiece.white_turn:
@@ -61,7 +60,10 @@ class ChessPiece(fltk.Fl_Box):
                 self.dx = fltk.Fl.event_x() - self.x()
                 self.dy = fltk.Fl.event_y() - self.y()
                 # highlight valid moves
-                self.window.board.valid_moves = check_valid_moves(self.type, self.pos, ChessPiece.pieces)
+                self.window.refresh_board_pieces()
+                self.window.board.valid_moves = check_valid_moves(
+                    self.type, self.pos, ChessPiece.pieces
+                )
                 self.parent().redraw()
                 return 1
             case fltk.FL_DRAG:
@@ -73,26 +75,36 @@ class ChessPiece(fltk.Fl_Box):
             case fltk.FL_RELEASE:
                 x = fltk.Fl.event_x() // 100
                 y = fltk.Fl.event_y() // 100
-                if (x, y) not in check_valid_moves(self.type, self.pos, ChessPiece.pieces):
+                self.window.refresh_board_pieces()
+                if (x, y) not in check_valid_moves(
+                    self.type, self.pos, ChessPiece.pieces
+                ):
                     self.position(self.pos[0] * 100, self.pos[1] * 100)
                 else:
-                    print(f"Released at {x}, {y}")
+                    print(f"Piece released at {x}, {y}")
                     self.position(x * 100, y * 100)
                     # check if piece eats another piece
+                    self.window.refresh_board_pieces()
                     if ChessPiece.pieces[x][y] is not None:
                         for piece in self.window.but:
                             if piece.pos == (x, y):
                                 piece.hide()
-                                break
+                                print(f"Eating {piece.type}")
                         # check if piece is a king
-                        if ChessPiece.pieces[x][y].value in [Piece.KING_BLACK.value, Piece.KING_WHITE.value]:
+                        if ChessPiece.pieces[x][y].value in [
+                            Piece.KING_BLACK.value,
+                            Piece.KING_WHITE.value,
+                        ]:
                             fltk.fl_message("King is dead! Game Over!")
+                            ChessPiece.ended = True
+                            self.window.refresh_board_pieces()
                             return 1
                     self.pos = (x, y)
                     self.window.refresh_board_pieces()
                     ChessPiece.white_turn = not ChessPiece.white_turn
-                    print(ChessPiece.white_turn)
+                    print(f"Is white turn: {ChessPiece.white_turn}")
                 self.window.board.valid_moves = []
+                self.window.refresh_board_pieces()
                 self.parent().redraw()
                 return 1
             case _:
@@ -107,19 +119,30 @@ class ChessWindow(fltk.Fl_Double_Window):
         self.but = tuple(
             ChessPiece(pos_x, pos_y, self) for pos_x in range(8) for pos_y in range(2)
         ) + tuple(
-            ChessPiece(pos_x, pos_y, self) for pos_x in range(8) for pos_y in range(6, 8)
+            ChessPiece(pos_x, pos_y, self)
+            for pos_x in range(8)
+            for pos_y in range(6, 8)
         )
+        self.status_bar = fltk.Fl_Box(0, 800, 800, 30, "FL Chess")
         self.end()
 
     def refresh_board_pieces(self):
         ChessPiece.pieces = [[None for _ in range(8)] for _ in range(8)]
         for piece in self.but:
-            ChessPiece.pieces[piece.pos[0]][piece.pos[1]] = piece.type
-
+            # check if piece is eaten
+            if piece.visible():
+                ChessPiece.pieces[piece.pos[0]][piece.pos[1]] = piece.type
+        if not ChessPiece.ended:
+            if ChessPiece.white_turn:
+                self.status_bar.label("White's turn")
+                return
+            self.status_bar.label("Black's turn")
+            return
+        self.status_bar.label("Game Over!")
 
 
 if __name__ == "__main__":
-    w = ChessWindow(800, 800, "FL Chess")
+    w = ChessWindow(800, 830, "FL Chess")
     # w.resizable(w)
     w.show()
     fltk.Fl.run()

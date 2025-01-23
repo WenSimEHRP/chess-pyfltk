@@ -92,7 +92,14 @@ def is_same_color(piece1, piece2):
             Piece.KNIGHT_WHITE,
             Piece.PAWN_WHITE,
         ]
-    else:
+    elif piece1 in [
+        Piece.KING_BLACK,
+        Piece.QUEEN_BLACK,
+        Piece.ROOK_BLACK,
+        Piece.BISHOP_BLACK,
+        Piece.KNIGHT_BLACK,
+        Piece.PAWN_BLACK,
+    ]:
         return piece2 in [
             Piece.KING_BLACK,
             Piece.QUEEN_BLACK,
@@ -101,6 +108,9 @@ def is_same_color(piece1, piece2):
             Piece.KNIGHT_BLACK,
             Piece.PAWN_BLACK,
         ]
+    else:
+        raise ValueError("Invalid piece type")
+
 
 def is_white(piece):
     """checks if a piece is white"""
@@ -113,6 +123,7 @@ def is_white(piece):
         Piece.PAWN_WHITE,
     ]
 
+
 def king_valid_moves(x, y):
     """returns the coordinates around a piece, ignoring invalid coordinates"""
     moves = []
@@ -122,6 +133,7 @@ def king_valid_moves(x, y):
                 continue
             moves.append((x + i, y + j))
     return moves
+
 
 def diagonal(x, y):
     """returns the coordinates of the diagonals of a piece"""
@@ -142,6 +154,7 @@ def diagonal(x, y):
             bottom_right.append((x + i, y + i))
     return top_left, top_right, bottom_left, bottom_right
 
+
 def axes(x, y):
     """returns the coordinates of the axes of a piece"""
     # returns two axes, horizontal and vertical
@@ -161,12 +174,13 @@ def axes(x, y):
             right.append((x + i, y))
     return up, down, left, right
 
+
 def check_valid_moves(
     piece: Piece, coor: tuple[int, int], pieces: list[list[Piece]]
 ) -> list[tuple[int, int]]:
     """gives out the valid moves for each piece"""
     """requires reading all pieces on a board"""
-    valid_moves = []
+    valid_moves = set()
 
     match piece:
         case Piece.KING_WHITE | Piece.KING_BLACK:
@@ -175,61 +189,64 @@ def check_valid_moves(
                 if (
                     0 <= h < 8 and 0 <= v < 8
                 ):  # Ensure the coordinates are within the board limits
-                    if pieces[h][v] is None or not is_same_color(piece, pieces[h][v]):
-                        valid_moves.append(c)
+                    if pieces[h][v] is None:
+                        valid_moves |= {c}
+                        continue
+                    if not is_same_color(piece, pieces[h][v]):
+                        valid_moves |= {c}
         case Piece.PAWN_WHITE:
             h, v = coor
             # check if v is at starting position
             if v == 1:
                 if pieces[h][v + 1] is None and pieces[h][v + 2] is None:
-                    valid_moves.append((h, v + 2))
+                    valid_moves |= {(h, v + 2)}
             if v + 1 < 8 and pieces[h][v + 1] is None:
-                valid_moves.append((h, v + 1))
+                valid_moves |= {(h, v + 1)}
             if (
                 h - 1 >= 0
                 and v + 1 < 8
                 and not is_same_color(piece, pieces[h - 1][v + 1])
                 and pieces[h - 1][v + 1] is not None
             ):
-                valid_moves.append((h - 1, v + 1))
+                valid_moves |= {(h - 1, v + 1)}
             if (
                 h + 1 < 8
                 and v + 1 < 8
                 and not is_same_color(piece, pieces[h + 1][v + 1])
                 and pieces[h + 1][v + 1] is not None
             ):
-                valid_moves.append((h + 1, v + 1))
+                valid_moves |= {(h + 1, v + 1)}
         case Piece.PAWN_BLACK:
             h, v = coor
             # check if v is at starting position
             if v == 6:
                 if pieces[h][v - 1] is None and pieces[h][v - 2] is None:
-                    valid_moves.append((h, v - 2))
+                    valid_moves |= {(h, v - 2)}
             if v - 1 >= 0 and pieces[h][v - 1] is None:
-                valid_moves.append((h, v - 1))
+                valid_moves |= {(h, v - 1)}
             if (
                 h - 1 >= 0
                 and v - 1 >= 0
                 and not is_same_color(piece, pieces[h - 1][v - 1])
                 and pieces[h - 1][v - 1] is not None
             ):
-                valid_moves.append((h - 1, v - 1))
+                valid_moves |= {(h - 1, v - 1)}
             if (
                 h + 1 < 8
                 and v - 1 >= 0
                 and not is_same_color(piece, pieces[h + 1][v - 1])
                 and pieces[h + 1][v - 1] is not None
             ):
-                valid_moves.append((h + 1, v - 1))
+                valid_moves |= {(h + 1, v - 1)}
         case Piece.QUEEN_WHITE | Piece.QUEEN_BLACK:
             h, v = coor
             c = diagonal(h, v) + axes(h, v)
             for li in c:
                 for coor in li:
                     if pieces[coor[0]][coor[1]] is None:
-                        valid_moves.append(coor)
+                        valid_moves |= {coor}
                     elif not is_same_color(piece, pieces[coor[0]][coor[1]]):
-                        valid_moves.append(coor)
+                        valid_moves |= {coor}
                         break
                     else:
                         break
@@ -239,9 +256,9 @@ def check_valid_moves(
             for li in c:
                 for coor in li:
                     if pieces[coor[0]][coor[1]] is None:
-                        valid_moves.append(coor)
+                        valid_moves |= {coor}
                     elif not is_same_color(piece, pieces[coor[0]][coor[1]]):
-                        valid_moves.append(coor)
+                        valid_moves |= {coor}
                         break
                     else:
                         break
@@ -251,9 +268,9 @@ def check_valid_moves(
             for li in c:
                 for coor in li:
                     if pieces[coor[0]][coor[1]] is None:
-                        valid_moves.append(coor)
+                        valid_moves |= {coor}
                     elif not is_same_color(piece, pieces[coor[0]][coor[1]]):
-                        valid_moves.append(coor)
+                        valid_moves |= {coor}
                         break
                     else:
                         break
@@ -266,14 +283,9 @@ def check_valid_moves(
                             if pieces[h + i][v + j] is None or not is_same_color(
                                 piece, pieces[h + i][v + j]
                             ):
-                                valid_moves.append((h + i, v + j))
+                                valid_moves |= {(h + i, v + j)}
         case _:
             pass
 
-    sanitized_moves = set()
-    for move in valid_moves:
-        if move[0] not in X_RANGE or move[1] not in Y_RANGE:
-            continue
-        sanitized_moves |= {move}
-    print(f"Cur: {coor}, valid: {sanitized_moves}")
-    return sanitized_moves
+    print(f"Current: {coor}, valid: {valid_moves}")
+    return valid_moves
