@@ -67,12 +67,14 @@ class ChessPiece(fltk.Fl_Box):
                 self.parent().redraw()
                 return 1
             case fltk.FL_DRAG:
+                self.labelsize(150)
                 x = fltk.Fl.event_x()
                 y = fltk.Fl.event_y()
                 self.position(x - self.dx, y - self.dy)
                 self.parent().redraw()
                 return 1
             case fltk.FL_RELEASE:
+                self.labelsize(100)
                 x = fltk.Fl.event_x() // 100
                 y = fltk.Fl.event_y() // 100
                 self.window.refresh_board_pieces()
@@ -172,5 +174,6 @@ class ChessWindow(fltk.Fl_Double_Window):
 if __name__ == "__main__":
     w = ChessWindow(800, 830, "FL Chess")
     # w.resizable(w)
+    fltk.Fl.scheme("plastic")
     w.show()
     fltk.Fl.run()
