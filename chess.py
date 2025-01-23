@@ -15,7 +15,7 @@ class Board(fltk.Fl_Group):
 
     def draw(self):
         super().draw()
-        color = [fltk.FL_WHITE, fltk.FL_DARK2]
+        color = [215, 0x6D9C5200]
         highlight_color = [3, 3 + 8]
         for y in range(0, self.w(), self.sqrsiz):
             for x in range(0, self.h(), self.sqrsiz):
